@@ -1,10 +1,12 @@
 import Control.Applicative
 import Control.Monad
-import qualified Data.List as L
+import Data.List (sortBy)
 import Text.Parsec.Char
 import Text.ParserCombinators.Parsec
 import Control.Monad.Except
 import Data.Either
+import Control.Arrow
+import Data.List.Split (splitOn)
 
 type CalorieList = [[Int]]
 
@@ -30,7 +32,7 @@ countCalories :: CalorieList -> [Int]
 countCalories = map sum
 
 top3Calories :: [Int] -> [Int]
-top3Calories = take 3 . L.sortBy (flip compare)
+top3Calories = take 3 . sortBy (flip compare)
 
 part1 :: CalorieList -> Int
 part1 = maximum . countCalories
@@ -47,3 +49,10 @@ main = do
     list <- rightOrError <$> parseFromFile parseList "input.txt"
     putStrLn $ "Part 1: " ++ (show $ part1 list)
     putStrLn $ "Part 2: " ++ (show $ part2 list)
+
+-- Why not?
+oneLine :: String -> IO (Int, Int)
+oneLine f = do
+    f <- readFile f
+    return $ (head *** sum . take 3) <$> dupe $ sortBy (flip compare) $ sum <$> (map read) <$> lines <$> splitOn "\n\n" f
+        where dupe a = (a, a)
