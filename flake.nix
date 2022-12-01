@@ -1,0 +1,23 @@
+{
+  description = "Advent of code 2022";
+
+  inputs.flake-utils.url = "github:numtide/flake-utils";
+
+  outputs = { self, nixpkgs, flake-utils }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system}; in
+      {
+        devShell = with pkgs; mkShell {
+          name = "aoc2022";
+          buildInputs = [
+            haskell-language-server
+
+            (haskellPackages.ghcWithHoogle (p: with p; [
+              megaparsec
+              split
+            ]))
+          ];
+        };
+      });
+}
