@@ -13,6 +13,11 @@
           buildInputs = [
             haskell-language-server
 
+            rustc
+            cargo
+            rust-analyzer
+            rustfmt
+
             (haskellPackages.ghcWithHoogle (p: with p; [
               megaparsec
               split
