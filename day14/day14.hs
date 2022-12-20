@@ -64,14 +64,14 @@ exampleData =
         "498,4 -> 498,6 -> 496,6\n"
             ++ "503,4 -> 502,4 -> 502,9 -> 494,9"
 
-maybeMove :: M.Map MPos Block -> MPos -> MPos -> Maybe MPos
-maybeMove w (x, y) (a, b) = case w M.!? p' of
-  Nothing -> Just p'
+maybeMove :: World -> MPos -> MPos -> Maybe MPos
+maybeMove (m, w) (x, y) (a, b) = case w M.!? (x', y') of
+  Nothing -> if y' >= m + 2 then Nothing else Just (x', y')
   Just _ -> Nothing
   where
-    p' = (x + a, y +b)
+    (x', y') = (x + a, y +b)
 
-moveSand :: M.Map MPos Block -> MPos -> Maybe MPos
+moveSand :: World -> MPos -> Maybe MPos
 moveSand w a = mvDown <|> mvLeft <|> mvRight
   where
     mvDown = maybeMove w a (0, 1)
@@ -80,16 +80,31 @@ moveSand w a = mvDown <|> mvLeft <|> mvRight
 
 iterateMaybe :: (a -> Bool) -> (a -> Maybe a) -> a -> Maybe a
 iterateMaybe stop f a = case f a of
-  Nothing -> Just a
-  Just b -> if stop b then Nothing else iterateMaybe stop f b
+    Nothing -> Just a
+    Just b -> if stop b then Nothing else iterateMaybe stop f b
 
-nextWorld :: World -> Maybe World
-nextWorld (m, w) = (\p -> (m, M.insert p Sand w)) <$> iterateMaybe ((>= m) . snd) (moveSand w) (500, 0)
+iterateMaybe2 :: (a -> Bool) -> (a -> Maybe a) -> a -> Maybe a
+iterateMaybe2 stop f a = case f a of
+    Nothing -> if stop a then Nothing else Just a
+    Just b -> iterateMaybe2 stop f b
+
+nextWorld :: (MPos -> Bool) -> World -> Maybe World
+nextWorld stop (m, w) = (\p -> (m, M.insert p Sand w)) <$> iterateMaybe stop (moveSand (m, w)) (500, 0)
+
+nextWorld2 :: (M.Map MPos Block -> Bool) -> World -> Maybe World
+nextWorld2 stop (m, w) = do
+  res <- iterateMaybe (const False) (moveSand (m, w)) (500, 0)
+  let world = M.insert res Sand w
+  if stop world then Nothing else return (m, world)
 
 part1 :: World -> Int
-part1 = pred . length . takeWhile isJust . iterate (>>= nextWorld) . Just
+part1 (m, w) = pred . length . takeWhile isJust . iterate (>>= nextWorld ((>= m) . snd)) . Just $ (m, w)
+
+part2 :: World -> Int
+part2 (m, w) = length . takeWhile isJust . iterate (>>= nextWorld2 (M.member (500, 0))) . Just $ (m, w)
 
 main :: IO ()
 main = do
     input <- parseWorld <$> readFile "input.txt"
     putStrLn $ "Part 1: " ++ (show $ part1 input)
+    putStrLn $ "Part 2: " ++ (show $ part2 input)
