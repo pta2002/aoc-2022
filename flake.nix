@@ -21,6 +21,8 @@
             (haskellPackages.ghcWithHoogle (p: with p; [
               megaparsec
               split
+              heap
+              search-algorithms
             ]))
           ];
         };
