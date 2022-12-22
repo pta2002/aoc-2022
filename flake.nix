@@ -18,7 +18,7 @@
             rust-analyzer
             rustfmt
 
-            (haskellPackages.ghcWithHoogle (p: with p; [
+            (haskell.packages.ghc924.ghcWithPackages (p: with p; [
               megaparsec
               split
               heap
